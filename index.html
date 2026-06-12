@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeonArena — Play & Earn</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root{--neon:#00ffe7;--neon2:#ff00c8;--gold:#ffd700;--ref:#a259ff;--tron:#ff0420;--success:#00ff88;--dark:#050a14;--dark2:#0a1428;--card:rgba(255,255,255,.04);--border:rgba(0,255,231,.2);}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Rajdhani',sans-serif;background:var(--dark);color:#cce6ff;min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse 80% 50% at 20% 20%,rgba(0,255,231,.06) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 80%,rgba(255,0,200,.06) 0%,transparent 60%);z-index:0;}
+  header{position:sticky;top:0;z-index:100;background:rgba(5,10,20,.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;}
+  .logo{font-family:'Orbitron',monospace;font-size:1.4rem;font-weight:900;background:linear-gradient(90deg,var(--neon),var(--neon2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:2px;}
+  .header-actions{display:flex;gap:1rem;align-items:center;}
+  .badge-secure{font-size:.7rem;letter-spacing:1px;background:rgba(0,255,136,.1);border:1px solid var(--success);color:var(--success);padding:3px 10px;border-radius:20px;display:flex;align-items:center;gap:5px;}
+  section{position:relative;z-index:1;}
+  .hero{text-align:center;padding:80px 2rem 60px;}
+  .hero-tag{display:inline-block;font-size:.75rem;letter-spacing:3px;text-transform:uppercase;color:var(--neon);margin-bottom:1.5rem;padding:5px 16px;border:1px solid rgba(0,255,231,.3);border-radius:20px;background:rgba(0,255,231,.05);}
+  .hero h1{font-family:'Orbitron',monospace;font-size:clamp(2.2rem,6vw,4.5rem);font-weight:900;line-height:1.1;margin-bottom:1.5rem;background:linear-gradient(135deg,#fff 30%,var(--neon) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .hero p{font-size:1.15rem;color:rgba(200,230,255,.65);max-width:520px;margin:0 auto 2.5rem;line-height:1.7;}
+  .tabs{display:flex;gap:6px;justify-content:center;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:6px;width:fit-content;margin:0 auto 3rem;}
+  .tab-btn{font-family:'Rajdhani',sans-serif;font-size:.9rem;font-weight:600;letter-spacing:1px;padding:8px 22px;border-radius:10px;border:none;background:transparent;color:rgba(200,230,255,.5);cursor:pointer;transition:all .25s;}
+  .tab-btn.active{background:linear-gradient(135deg,var(--neon),#0090ff);color:var(--dark);box-shadow:0 0 20px rgba(0,255,231,.3);}
+  .view{display:none;}
+  .view.active{display:block;}
+  .games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem;max-width:1100px;margin:0 auto;padding:0 1.5rem 4rem;}
+  .game-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:transform .3s,box-shadow .3s;cursor:pointer;position:relative;}
+  .game-card:hover{transform:translateY(-6px);box-shadow:0 0 30px rgba(0,255,231,.15);border-color:rgba(0,255,231,.5);}
+  .game-thumb{height:160px;display:flex;align-items:center;justify-content:center;font-size:4rem;position:relative;overflow:hidden;}
+  .game-thumb.color1{background:linear-gradient(135deg,#0a1428,#1a0a2e);}
+  .game-thumb.color2{background:linear-gradient(135deg,#0a1428,#0a2014);}
+  .game-thumb.color3{background:linear-gradient(135deg,#0a1428,#2e1a0a);}
+  .game-thumb.color4{background:linear-gradient(135deg,#0a1428,#2e0a1a);}
+  .game-badge{position:absolute;top:10px;right:10px;font-size:.65rem;letter-spacing:1px;padding:3px 8px;border-radius:6px;font-weight:700;}
+  .badge-hot{background:rgba(255,100,0,.2);border:1px solid #ff6400;color:#ff6400;}
+  .badge-new{background:rgba(0,255,136,.2);border:1px solid var(--success);color:var(--success);}
+  .badge-popular{background:rgba(255,215,0,.2);border:1px solid var(--gold);color:var(--gold);}
+  .game-info{padding:1.2rem;}
+  .game-info h3{font-family:'Orbitron',monospace;font-size:.95rem;margin-bottom:.4rem;}
+  .game-info p{font-size:.85rem;color:rgba(200,230,255,.5);margin-bottom:1rem;}
+  .game-meta{display:flex;justify-content:space-between;align-items:center;}
+  .players-online{font-size:.75rem;color:var(--success);}
+  .players-online::before{content:'● ';}
+  .btn-play{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.8rem;letter-spacing:1px;padding:6px 16px;border-radius:8px;border:none;background:linear-gradient(90deg,var(--neon),#0090ff);color:var(--dark);cursor:pointer;transition:all .2s;}
+  .btn-play:hover{transform:scale(1.05);box-shadow:0 0 15px rgba(0,255,231,.4);}
+  .lock-bar{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(5,10,20,.97);z-index:150;display:none;align-items:center;justify-content:center;flex-direction:column;gap:1.5rem;text-align:center;padding:2rem;}
+  .lock-bar.open{display:flex;}
+  .lock-bar h2{font-family:'Orbitron',monospace;color:var(--neon);font-size:1.5rem;}
+  .lock-bar p{color:rgba(200,230,255,.5);max-width:380px;font-size:.9rem;line-height:1.7;}
+  .price-big{font-family:'Orbitron',monospace;font-size:4rem;font-weight:900;color:var(--gold);line-height:1;}
+  .modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(5,10,20,.92);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--dark2);border:1px solid var(--border);border-radius:20px;padding:2.5rem;width:100%;max-width:420px;position:relative;animation:modalIn .35s cubic-bezier(.17,.67,.38,1.25);}
+  @keyframes modalIn{from{transform:scale(.85) translateY(20px);opacity:0;}to{transform:scale(1) translateY(0);opacity:1;}}
+  .modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;color:rgba(200,230,255,.4);font-size:1.3rem;cursor:pointer;}
+  .modal-close:hover{color:#fff;}
+  .modal h2{font-family:'Orbitron',monospace;font-size:1.2rem;margin-bottom:.5rem;color:var(--neon);}
+  .modal p.sub{font-size:.85rem;color:rgba(200,230,255,.5);margin-bottom:2rem;}
+  .price-tag{text-align:center;margin-bottom:2rem;background:rgba(255,215,0,.05);border:1px solid rgba(255,215,0,.3);border-radius:12px;padding:1rem;}
+  .price-tag .amount{font-family:'Orbitron',monospace;font-size:2.5rem;font-weight:900;color:var(--gold);display:block;}
+  .price-tag .per{font-size:.75rem;color:rgba(200,230,255,.4);letter-spacing:1px;}
+  .form-group{margin-bottom:1.2rem;}
+  .form-group label{display:block;font-size:.78rem;letter-spacing:1px;color:rgba(200,230,255,.6);margin-bottom:.5rem;text-transform:uppercase;}
+  .form-group input{width:100%;padding:12px 16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;color:#cce6ff;font-family:'Rajdhani',sans-serif;font-size:.95rem;transition:border-color .2s;outline:none;}
+  .form-group input:focus{border-color:var(--neon);box-shadow:0 0 10px rgba(0,255,231,.1);}
+  .form-group input::placeholder{color:rgba(200,230,255,.3);}
+  .btn-register{width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(90deg,var(--neon),#0090ff);color:var(--dark);font-family:'Orbitron',monospace;font-size:.9rem;font-weight:700;letter-spacing:2px;cursor:pointer;transition:all .3s;box-shadow:0 0 20px rgba(0,255,231,.3);}
+  .btn-register:hover{box-shadow:0 0 35px rgba(0,255,231,.5);transform:translateY(-2px);}
+  .notif{position:fixed;bottom:2rem;right:2rem;z-index:300;background:var(--dark2);border:1px solid var(--success);border-radius:12px;padding:1rem 1.5rem;display:flex;align-items:center;gap:10px;box-shadow:0 0 30px rgba(0,255,136,.2);animation:slideIn .4s ease;max-width:320px;transform:translateX(200%);transition:transform .4s cubic-bezier(.17,.67,.38,1.25);}
+  .notif.show{transform:translateX(0);}
+  .notif-icon{font-size:1.2rem;}
+  .notif-text{font-size:.85rem;}
+  .notif-text strong{color:var(--success);display:block;}
+  .loading{display:none;text-align:center;padding:2rem;}
+  .loading.show{display:block;}
+  .spinner{border:3px solid rgba(0,255,231,.2);border-top:3px solid var(--neon);border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;margin:0 auto 1rem;}
+  @keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+  @media(max-width:600px){.games-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">⚡ NeonArena</div>
+  <div class="header-actions">
+    <span class="badge-secure">🔒 Sécurisé</span>
+    <button class="btn-register" onclick="showModal()" style="width:auto;padding:8px 18px;margin:0;">S'INSCRIRE — $1</button>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <span class="hero-tag">🎮 Plateforme de Jeux Sécurisée</span>
+  <h1>Joue.<br>Gagne.<br>Retire en TRX.</h1>
+  <p>Accès illimité à tous les jeux pour <strong style="color:var(--gold)">$1 seulement</strong>. Retraits instantanés vers ton portefeuille TRON.</p>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('games')">🎮 Jeux</button>
+    <button class="tab-btn" onclick="switchTab('admin')">💼 Admin</button>
+  </div>
+</div>
+
+<!-- GAMES VIEW -->
+<section class="view active" id="tab-games">
+  <div class="games-grid">
+    <div class="game-card" onclick="openGame('Snake Neon')">
+      <div class="game-thumb color1"><span>🐍</span><span class="game-badge badge-hot">🔥 HOT</span></div>
+      <div class="game-info">
+        <h3>Snake Neon</h3>
+        <p>Classique moderne avec effets néon.</p>
+        <div class="game-meta">
+          <span class="players-online">2,341 en ligne</span>
+          <button class="btn-play">JOUER</button>
+        </div>
+      </div>
+    </div>
+    <div class="game-card" onclick="openGame('Asteroid')">
+      <div class="game-thumb color2"><span>🚀</span><span class="game-badge badge-new">NEW</span></div>
+      <div class="game-info">
+        <h3>Asteroid Drift</h3>
+        <p>Évite les astéroïdes.</p>
+        <div class="game-meta">
+          <span class="players-online">987 en ligne</span>
+          <button class="btn-play">JOUER</button>
+        </div>
+      </div>
+    </div>
+    <div class="game-card" onclick="openGame('Racer')">
+      <div class="game-thumb color3"><span>🏎️</span><span class="game-badge badge-popular">⭐ TOP</span></div>
+      <div class="game-info">
+        <h3>Pixel Racer</h3>
+        <p>Course infinie.</p>
+        <div class="game-meta">
+          <span class="players-online">4,120 en ligne</span>
+          <button class="btn-play">JOUER</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ADMIN VIEW -->
+<section class="view" id="tab-admin">
+  <div style="max-width:760px;margin:0 auto;padding:0 1.5rem 4rem;">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:2rem;margin-bottom:1.5rem;text-align:center;">
+      <h2 style="font-family:'Orbitron',monospace;background:linear-gradient(90deg,var(--gold),var(--neon));-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:1.5rem;margin-bottom:0.5rem;">💼 Tableau de Bord Admin</h2>
+      <p style="font-size:0.8rem;color:rgba(200,230,255,.4);">Accès propriétaire — revenus en temps réel</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem;">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.2rem;text-align:center;">
+        <span style="font-family:'Orbitron',monospace;font-size:1.8rem;font-weight:700;color:var(--gold);display:block;margin-bottom:0.3rem;" id="total-earned">$0.00</span>
+        <span style="font-size:0.75rem;color:rgba(200,230,255,.5);letter-spacing:1px;">Total gagné</span>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.2rem;text-align:center;">
+        <span style="font-family:'Orbitron',monospace;font-size:1.8rem;font-weight:700;color:var(--neon);display:block;margin-bottom:0.3rem;" id="total-users">0</span>
+        <span style="font-size:0.75rem;color:rgba(200,230,255,.5);letter-spacing:1px;">Inscrits</span>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.2rem;text-align:center;">
+        <span style="font-family:'Orbitron',monospace;font-size:1.8rem;font-weight:700;color:var(--ref);display:block;margin-bottom:0.3rem;" id="today-users">0</span>
+        <span style="font-size:0.75rem;color:rgba(200,230,255,.5);letter-spacing:1px;">Aujourd'hui</span>
+      </div>
+    </div>
+
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:2rem;">
+      <h3 style="font-family:'Orbitron',monospace;color:var(--tron);margin-bottom:1.5rem;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:1.3rem;">🔴</span> Retrait TRON
+      </h3>
+      <div class="form-group">
+        <label>Adresse TRON</label>
+        <input type="text" id="tron-addr" placeholder="TQxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" maxlength="40" />
+      </div>
+      <div class="form-group">
+        <label>Montant (USD)</label>
+        <input type="number" id="withdraw-amount" placeholder="Minimum $10.00" min="10" step="0.01" />
+      </div>
+      <div class="form-group">
+        <label>Code Admin</label>
+        <input type="password" id="admin-pin" placeholder="••••••••" />
+      </div>
+      <button class="btn-register" onclick="requestWithdraw()" style="background:linear-gradient(90deg,var(--tron),#ff6b35);margin:0;">🔴 RETIRER EN TRX</button>
+      <p style="font-size:0.72rem;color:rgba(200,230,255,.35);text-align:center;margin-top:0.8rem;">Frais réseau TRON : ~$0.50</p>
+    </div>
+  </div>
+</section>
+
+<!-- REGISTER MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h2>🎮 Accès NeonArena</h2>
+    <p class="sub">Une seule inscription. Accès illimité à tous les jeux.</p>
+
+    <div class="price-tag">
+      <span class="amount">$1</span>
+      <span class="per">PAIEMENT UNIQUE · ACCÈS À VIE</span>
+    </div>
+
+    <div class="form-group">
+      <label>Nom d'utilisateur</label>
+      <input type="text" id="reg-username" placeholder="GamerPro99" maxlength="20" />
+    </div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="reg-email" placeholder="ton@email.com" />
+    </div>
+    <div class="form-group">
+      <label>Mot de passe</label>
+      <input type="password" id="reg-password" placeholder="Min. 8 caractères" />
+    </div>
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p style="color:rgba(200,230,255,.5);font-size:0.85rem;">Traitement du paiement...</p>
+    </div>
+
+    <button class="btn-register" id="submit-btn" onclick="processRegistration()">💳 PAYER $1 ET JOUER</button>
+
+    <p style="font-size:0.65rem;color:rgba(200,230,255,.25);text-align:center;margin-top:1rem;line-height:1.5;">
+      🔒 Paiement sécurisé SSL · Remboursement 24h
+    </p>
+  </div>
+</div>
+
+<!-- LOCK BAR -->
+<div class="lock-bar" id="lockbar">
+  <div style="font-size:3rem">🔒</div>
+  <h2>Accès réservé aux membres</h2>
+  <div class="price-big">$1</div>
+  <p>Inscris-toi une seule fois pour accéder à <strong style="color:var(--neon)">tous les jeux</strong>.</p>
+  <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;">
+    <button class="btn-register" style="width:auto;padding:12px 30px;" onclick="closeLock(); showModal();">S'INSCRIRE — $1</button>
+    <button style="background:var(--card);border:1px solid var(--border);color:var(--neon);padding:12px 30px;border-radius:12px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-weight:700;" onclick="closeLock()">Retour</button>
+  </div>
+</div>
+
+<!-- NOTIFICATION -->
+<div class="notif" id="notif">
+  <span class="notif-icon" id="notif-icon">✅</span>
+  <div class="notif-text">
+    <strong id="notif-title">Succès</strong>
+    <span id="notif-msg">Opération effectuée.</span>
+  </div>
+</div>
+
+<script>
+const BACKEND_URL = 'https://neonarena-backend-production.up.railway.app';
+let isLoggedIn = false;
+
+// TABS
+function switchTab(tab) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// MODAL
+function showModal() {
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+function openGame(name) {
+  if (!isLoggedIn) {
+    document.getElementById('lockbar').classList.add('open');
+  }
+}
+function closeLock() {
+  document.getElementById('lockbar').classList.remove('open');
+}
+
+// REGISTRATION
+async function processRegistration() {
+  const u = document.getElementById('reg-username').value.trim();
+  const e = document.getElementById('reg-email').value.trim();
+  const p = document.getElementById('reg-password').value;
+
+  if (!u || u.length < 3) { showNotif('Erreur', 'Nom trop court', '⚠️'); return; }
+  if (!e || !e.includes('@')) { showNotif('Erreur', 'Email invalide', '⚠️'); return; }
+  if (!p || p.length < 8) { showNotif('Erreur', 'Mot de passe trop court', '⚠️'); return; }
+
+  document.getElementById('submit-btn').style.display = 'none';
+  document.getElementById('loading').classList.add('show');
+
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: u, email: e, password: p })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      isLoggedIn = true;
+      closeModal();
+      document.getElementById('loading').classList.remove('show');
+      document.getElementById('submit-btn').style.display = 'block';
+      showNotif('✅ Bienvenue ' + u + '!', 'Paiement confirmé. Accès activé.', '🎮');
+      updateAdminPanel();
+    } else {
+      throw new Error(data.error || 'Erreur serveur');
+    }
+  } catch (err) {
+    document.getElementById('loading').classList.remove('show');
+    document.getElementById('submit-btn').style.display = 'block';
+    showNotif('Erreur', err.message, '❌');
+  }
+}
+
+// WITHDRAW
+async function requestWithdraw() {
+  const addr = document.getElementById('tron-addr').value.trim();
+  const amount = parseFloat(document.getElementById('withdraw-amount').value);
+  const pin = document.getElementById('admin-pin').value;
+
+  const tronRegex = /^T[A-Za-z1-9]{33}$/;
+  if (!tronRegex.test(addr)) {
+    showNotif('Erreur TRON', 'Adresse invalide (doit commencer par T)', '⚠️');
+    return;
+  }
+  if (!amount || amount < 10) {
+    showNotif('Erreur', 'Montant minimum : $10.00', '⚠️');
+    return;
+  }
+  if (!pin) {
+    showNotif('Erreur', 'Code admin requis', '⚠️');
+    return;
+  }
+
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/admin/withdraw`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ adminKey: pin, tronAddress: addr, amount: amount })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      showNotif('✅ Retrait envoyé!', `$${amount} → ${addr.slice(0,8)}...`, '🔴');
+      document.getElementById('tron-addr').value = '';
+      document.getElementById('withdraw-amount').value = '';
+      document.getElementById('admin-pin').value = '';
+      updateAdminPanel();
+    } else {
+      showNotif('Erreur', data.error, '❌');
+    }
+  } catch (err) {
+    showNotif('Erreur', err.message, '❌');
+  }
+}
+
+// NOTIFICATIONS
+let notifTimeout;
+function showNotif(title, msg, icon) {
+  clearTimeout(notifTimeout);
+  const el = document.getElementById('notif');
+  document.getElementById('notif-title').textContent = title;
+  document.getElementById('notif-msg').textContent = msg;
+  document.getElementById('notif-icon').textContent = icon || '✅';
+  el.classList.add('show');
+  notifTimeout = setTimeout(() => el.classList.remove('show'), 4000);
+}
+
+// UPDATE ADMIN PANEL
+async function updateAdminPanel() {
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/admin/stats`, {
+      headers: { 'x-admin-key': 'demo-key' }
+    });
+    if (response.ok) {
+      const data = await response.json();
+      document.getElementById('total-earned').textContent = '$' + data.netBalance.toFixed(2);
+      document.getElementById('total-users').textContent = data.totalUsers;
+      document.getElementById('today-users').textContent = data.todayUsers;
+    }
+  } catch (err) {
+    console.log('Stats non disponibles', err);
+  }
+}
+
+// INIT
+updateAdminPanel();
+setInterval(updateAdminPanel, 30000);
+</script>
+</body>
+</html>
